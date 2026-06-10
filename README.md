@@ -28,7 +28,7 @@ Unimem is cross-platform and supports **macOS**, **Linux**, and **Windows**.
 You can tap and install Unimem globally:
 ```bash
 brew tap korrakiran/unimem
-brew install unimem
+brew install korrakiran/unimem/unimem
 ```
 
 #### Option 2: Via `pipx` (Isolated Python Env)
@@ -47,7 +47,7 @@ pipx install unimem
 If you run Homebrew on Linux, you can install Unimem exactly like macOS:
 ```bash
 brew tap korrakiran/unimem
-brew install unimem
+brew install korrakiran/unimem/unimem
 ```
 
 #### Option 2: Via `pipx`
