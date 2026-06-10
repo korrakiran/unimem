@@ -137,11 +137,12 @@ class Unimem < Formula
       CRITICAL STARTUP RULE:
       Do NOT scan, list, or search the entire project repository or folder tree on startup. This wastes token context and is inefficient. Instead, follow these steps immediately:
       1. Run `unimem summary` to compile all recent events and file modifications into the memory layer.
-      2. Read the project memory file at `.unimem/memory.md` to get your full context (current goals, active task, completed features, recent decisions, and important files).
-      3. Trust `.unimem/memory.md` as the absolute source of truth for the project state.
+      2. Read the structured project state at `.unimem/state.json` first to get the exact roadmap, goals, tasks, and file listings.
+      3. Read the human-readable project memory at `.unimem/memory.md` next to get the narrative context, recent decisions, and details.
+      4. Trust `.unimem/state.json` and `.unimem/memory.md` as the absolute sources of truth for the project state. Do NOT attempt to reconstruct them or scan the repository.
 
       When you finish or pause work:
-      - Update the Unimem state (e.g. by running `unimem summary` or updating `.unimem/state.json`) so the next agent can seamlessly take over.
+      - Update the Unimem state (e.g. by running `unimem summary`, or updating `.unimem/state.json` or `.unimem/memory.md`) so the next agent can seamlessly take over.
     EOS
 
     begin
