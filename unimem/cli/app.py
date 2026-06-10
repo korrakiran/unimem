@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List
 import typer
 from rich.console import Console
+from rich.prompt import Confirm
 
 # Import commands
 from unimem import __version__
@@ -41,10 +42,10 @@ def watch_cmd():
     """Start the filesystem watcher to log file changes as Unimem events in real time."""
     project_root = find_project_root()
     manager = MemoryManager(project_root)
-    
+
     if not manager.is_initialized():
-        console.print("[red]Unimem is not initialized. Run 'unimem init' first.[/red]")
-        raise typer.Exit(code=1)
+        manager.bootstrap_if_needed()
+        console.print(f"[green]Initialized Unimem in {project_root}.[/green]")
         
     watcher = FilesystemWatcher(project_root)
     try:
@@ -68,10 +69,10 @@ def run_cmd(
     """
     project_root = find_project_root()
     manager = MemoryManager(project_root)
-    
+
     if not manager.is_initialized():
-        console.print("[red]Unimem is not initialized. Run 'unimem init' first.[/red]")
-        raise typer.Exit(code=1)
+        manager.bootstrap_if_needed()
+        console.print(f"[green]Initialized Unimem in {project_root}.[/green]")
         
     # Get extra arguments (the command to run)
     command = ctx.args

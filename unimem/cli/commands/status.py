@@ -21,11 +21,10 @@ def status_cmd():
     """Display Unimem initialization, project state details, and Git status."""
     project_root = find_project_root()
     manager = MemoryManager(project_root)
-    
+
     if not manager.is_initialized():
-        console.print("[red]Unimem is not initialized in this project.[/red]")
-        console.print("Run [cyan]unimem init[/cyan] to initialize.")
-        raise typer.Exit(code=1)
+        manager.bootstrap_if_needed()
+        console.print(f"[green]Initialized Unimem in {project_root}.[/green]")
         
     try:
         state = manager.load_state()

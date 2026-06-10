@@ -20,13 +20,11 @@ def continue_cmd(
     """Output the project handoff intelligence for another AI agent to resume work immediately."""
     project_root = find_project_root()
     manager = MemoryManager(project_root)
-    
+
     if not manager.is_initialized():
-        if raw:
-            print("ERROR: Unimem is not initialized in this project directory.")
-        else:
-            console.print("[red]Unimem is not initialized in this project directory.[/red]")
-        raise typer.Exit(code=1)
+        manager.bootstrap_if_needed()
+        if not raw:
+            console.print(f"[green]Initialized Unimem in {project_root}.[/green]")
         
     try:
         state = manager.load_state()

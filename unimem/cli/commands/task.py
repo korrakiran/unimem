@@ -20,10 +20,10 @@ def done_cmd(
     """Complete the current task and promote the next one."""
     project_root = find_project_root()
     manager = MemoryManager(project_root)
-    
+
     if not manager.is_initialized():
-        console.print("[red]Unimem is not initialized. Run 'unimem init' first.[/red]")
-        raise typer.Exit(code=1)
+        manager.bootstrap_if_needed()
+        console.print(f"[green]Initialized Unimem in {project_root}.[/green]")
         
     try:
         # Complete task and promote

@@ -23,10 +23,10 @@ def create_cmd():
     """Create a new point-in-time snapshot of the current state."""
     project_root = find_project_root()
     manager = MemoryManager(project_root)
-    
+
     if not manager.is_initialized():
-        console.print("[red]Unimem is not initialized. Run 'unimem init' first.[/red]")
-        raise typer.Exit(code=1)
+        manager.bootstrap_if_needed()
+        console.print(f"[green]Initialized Unimem in {project_root}.[/green]")
         
     try:
         state = manager.load_state()

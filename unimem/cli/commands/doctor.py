@@ -25,7 +25,11 @@ def doctor_cmd():
     """Run diagnostic checks on the Unimem setup in this directory."""
     project_root = find_project_root()
     manager = MemoryManager(project_root)
-    
+
+    if not manager.is_initialized():
+        manager.bootstrap_if_needed()
+        console.print(f"[green]Initialized Unimem in {project_root}.[/green]\n")
+
     console.print("[cyan]Running Unimem Diagnostics...[/cyan]\n")
     
     table = Table(title="Diagnostic Checks")

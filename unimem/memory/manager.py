@@ -42,6 +42,20 @@ class MemoryManager:
         """Check if .unimem is initialized in the project root."""
         return self.unimem_dir.is_dir() and get_state_file(self.project_root).exists()
 
+    def bootstrap_if_needed(self, project_name: str = "", description: str = "") -> bool:
+        """Create the Unimem project structure when it does not yet exist.
+
+        Returns True when initialization happened, False if the project was already initialized.
+        """
+        if self.is_initialized():
+            return False
+
+        if not project_name:
+            project_name = self.project_root.name
+
+        self.initialize(project_name, description)
+        return True
+
     def initialize(self, project_name: str, description: str = "") -> None:
         """Initialize the .unimem/ structure with default files."""
         logger.info(f"Initializing Unimem at project root: {self.project_root}")
