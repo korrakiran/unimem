@@ -1,0 +1,189 @@
+Metadata-Version: 2.4
+Name: unimem
+Version: 0.1.0
+Summary: Universal Project Memory Layer for AI Coding Agents
+Author-email: Kiran Korra <kiran@example.com>
+License: MIT
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: Topic :: Software Development :: Version Control :: Git
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: typer>=0.9.0
+Requires-Dist: rich>=13.0.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: watchdog>=3.0.0
+Requires-Dist: gitpython>=3.1.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: platformdirs>=4.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Dynamic: license-file
+
+# Unimem — Universal Project Memory Layer for AI Coding Agents
+
+Unimem is a lightweight, local, open-source persistent memory and handoff system designed specifically for AI coding agents (such as Claude Code, Gemini CLI, Codex, Aider, Antigravity, and future LLM agents).
+
+Unlike chat histories, Unimem focuses on **Persistent Project Intelligence**. It stores the high-level understanding of what was built, architecture decisions, goals, tasks, and modified files in a format that any AI agent can read and update.
+
+If one AI agent runs out of tokens or context window limits, you can switch to another agent, say `continue`, and the new agent immediately understands the exact context of the project.
+
+---
+
+## ⚡ Quick Start
+
+### Installation
+
+#### Via Pip:
+```bash
+pip install unimem
+```
+
+#### Via Homebrew:
+```bash
+brew tap korrakiran/unimem
+brew install unimem
+```
+
+---
+
+## 🏛️ Architecture
+
+Unimem stores all project memory in a local `.unimem/` folder at the project root.
+
+```text
+.unimem/
+├── state.json        # Compiled JSON database of project intelligence
+├── memory.md         # Auto-generated markdown of the current state
+├── events/           # Chronological logs of every event (file saves, git commits, runs)
+├── sessions/         # AI sessions showing active/ended agent logs
+├── snapshots/        # Backups of prior ProjectStates
+└── decisions/        # Markdown architecture decisions logs
+```
+
+### Flow Diagram
+
+```mermaid
+graph TD
+    A[AI Agent Command / User Actions] --> B(File Watcher / Git Commits)
+    B --> C[Event Stream Log in .unimem/events]
+    C --> D[Summarization Engine]
+    D --> E[.unimem/state.json & memory.md]
+    E --> F[Next AI Agent via unimem continue]
+```
+
+---
+
+## 🛠️ CLI Commands
+
+### 1. Initialize Project Memory
+Initialize Unimem in the current working directory.
+```bash
+unimem init --name "MyProject" --desc "A great python web app"
+```
+
+### 2. Check Memory Status
+Display the active branch, recent events table, current task focus, and changes.
+```bash
+unimem status
+```
+
+### 3. Generate Handoff Resume
+Print handoff instructions optimized for AI context consumption.
+```bash
+unimem continue
+```
+*Tip: Use `--raw` (or `-r`) to output raw markdown for piping to other tools.*
+
+### 4. Rebuild State summary
+Trigger the heuristic compiler to summarize all logged events since the last session.
+```bash
+unimem summary
+```
+
+### 5. Diagnostics Check
+Verify Unimem environment folders and health.
+```bash
+unimem doctor
+```
+
+### 6. Run Agent Sandbox
+Execute an agent tool wrapper ensuring Unimem variables and sessions are tracked automatically.
+```bash
+unimem run -a claude -- claude
+```
+
+### 7. Filesystem Watcher
+Run a background observer to track file creations, moves, deletions, and updates.
+```bash
+unimem watch
+```
+
+---
+
+## 🔌 Adapter Development Guide
+
+Unimem uses an Adapter pattern to connect code intelligence with agents. Custom adapters can be registered without modifying core code.
+
+### Writing a Custom Adapter
+Create a python file in the `unimem/adapters/` directory or register from an external plugin:
+
+```python
+from pathlib import Path
+from typing import Dict, Any, List
+from unimem.adapters.base import BaseAdapter
+from unimem.adapters.registry import AdapterRegistry
+
+@AdapterRegistry.register("my_custom_agent")
+class MyCustomAdapter(BaseAdapter):
+    
+    def load_context(self) -> Dict[str, Any]:
+        # Fetch current project memory and format it
+        return {
+            "prompt_instructions": "resume development on task X"
+        }
+
+    def save_session(self, session_id: str, summary: str, files_changed: List[str]) -> None:
+        # Save session data on completion
+        pass
+
+    def launch(self, command: List[str]) -> None:
+        # Wrap execution
+        import subprocess
+        subprocess.run(command)
+```
+
+---
+
+## 🤝 Contribution Guide
+
+We welcome contributions to Unimem! To set up local development:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/korrakiran/collector.git
+   cd collector
+   ```
+2. Set up virtual environment and install in editable mode with dev dependencies:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install -e .[dev]
+   ```
+3. Run tests using pytest:
+   ```bash
+   pytest
+   ```
+4. Follow PEP 8 guidelines and write tests for any new adapters or commands.
+
+---
+
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](file:///Users/kiran/collector/LICENSE) file for details.
