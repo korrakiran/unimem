@@ -233,7 +233,8 @@ Do NOT scan, list, or search the entire project repository or folder tree on sta
 4. Trust `.unimem/state.json` and `.unimem/memory.md` as the absolute sources of truth for the project state. Do NOT attempt to reconstruct them or scan the repository.
 
 - When you finish or pause work:
-- Update the Unimem state (e.g. by running `unimem summary`, or updating `.unimem/state.json` or `.unimem/memory.md`) so the next agent can seamlessly take over.
+- Always edit and update `.unimem/state.json` first to document completed features, goals, or tasks.
+- Next, run `unimem summary` in the terminal to compile and synchronize these changes into `.unimem/memory.md` and update agent rules files so the next agent can take over with full context.
 - When you complete the current task, run: unimem task done --next "describe the next task"
 - If you are interrupted or about to stop, always run: unimem task done --next "describe next task" before exiting so context is preserved for the next agent.
 """
