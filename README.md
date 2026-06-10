@@ -1,31 +1,73 @@
-# Unimem — Universal Project Memory Layer for AI Coding Agents
+# 🧠 Unimem — Universal Project Memory Layer for AI Coding Agents
 
-If one AI agent runs out of tokens or context window limits, you can switch to another agent, say `continue`, and the new agent immediately understands the exact context of the project.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
+[![Platform Support](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey.svg)](#-installation-guide)
+[![Homebrew Formula](https://img.shields.io/badge/Homebrew-Formula-orange.svg)](https://github.com/korrakiran/homebrew-unimem)
 
-### ⚡ Zero-Command Handoff Automation (How it Works)
+**Unimem** is a universal, persistent project memory and handoff layer designed for AI coding agents (like Claude Code, Gemini CLI, Cursor, Aider, Windsurf, and more). It helps you seamlessly switch between different AI coding tools mid-project without losing context, progress, or architectural decisions.
 
-**You don't need to initialize, watch, or compile manually anymore—the global rules force the agents to manage the Unimem memory state themselves!**
+---
 
-Here is the exact sequence of what happens under the hood:
-1. **You open Antigravity (or any other agent) and say "build project X":**
-   - The agent starts up, reads the global `~/.cursorrules` file, notices the folder has no project memory yet, and silently runs `unimem init` in the background.
-   - As it creates code files, it silently saves the state and updates `.unimem/memory.md` with goals and file details.
-2. **The first agent runs out of tokens and you terminate the session.**
-3. **You open Gemini CLI, Codex, or Claude Code in that directory:**
-   - The new agent starts up, reads the global `~/.cursorrules` / `~/.clauderules`, and immediately executes a command to read `.unimem/memory.md` to load the current workspace context.
-4. **You type `continue`:**
-   - Because the agent has already read `.unimem/memory.md` and knows the exact project state, it will immediately understand what files were created, what features are finished, and pick up right where the first agent stopped!
+## 💡 Why Unimem?
+
+When building apps with AI agents, you often hit limits:
+* ⚠️ **Token limits or context exhaustion** force you to restart your session.
+* ⚠️ **Tool switching** (e.g., from Claude Code to Gemini CLI) means you have to write long prompt summaries to explain what you've done.
+* ⚠️ **No persistent memory** means a fresh agent has no idea what code files exist, what features are finished, or why you chose a specific database pattern.
+
+**Unimem solves this with a zero-command, persistent project brain.** The incoming agent automatically reads `.unimem/memory.md` to instantly learn the project state, while the outgoing agent writes its progress before exiting.
+
+---
+
+## ✨ Key Features
+
+* 🚀 **Zero-Command Handoff**: You don't need to manually initialize, watch, or compile. Global shell hooks copy rule files and initialize memory automatically.
+* 📝 **Double-Layer Memory**:
+  * `.unimem/state.json`: A structured, queryable schema of the roadmap, completed features, and file paths.
+  * `.unimem/memory.md`: An auto-generated, human-readable project context file read by AI agents at startup.
+* 🛡️ **Abrupt Crash Protection**: The Zsh shell hook automatically triggers `unimem summary` in the background every time a command completes. If an agent crashes or is interrupted (`Ctrl+C`), your project memory is saved instantly.
+* 🔌 **Universal Agent Compatibility**: Works with any agent that respects `.cursorrules` or `.clauderules`.
+
+---
+
+## 🔄 Zero-Command Handoff in Action
+
+```mermaid
+sequenceDiagram
+    actor Developer
+    participant Zsh as Terminal Shell Hook
+    participant Agent1 as Outgoing AI Agent (e.g., Claude)
+    participant Unimem as Unimem Memory Layer
+    participant Agent2 as Incoming AI Agent (e.g., Gemini)
+
+    Developer->>Zsh: mkdir project && cd project
+    Note over Zsh: chpwd hook fires
+    Zsh->>Unimem: unimem init (Background)
+    Unimem-->>Developer: Auto-creates .cursorrules & .unimem/
+
+    Developer->>Agent1: Start building Habit Tracker
+    Agent1->>Unimem: unimem run -- npm run build (Logs events)
+    Agent1->>Unimem: Edit state.json (Roadmap progress)
+    Developer->>Agent1: Terminate Session (Ctrl+C / Out of Tokens)
+    
+    Note over Zsh: precmd hook fires
+    Zsh->>Unimem: unimem summary (Auto-compiles memory.md)
+
+    Developer->>Agent2: Start new session & type "continue"
+    Agent2->>Unimem: Reads .unimem/memory.md
+    Unimem-->>Agent2: Loads goal, current task, & file list
+    Agent2-->>Developer: Resumes coding right where Agent 1 stopped!
+```
 
 ---
 
 ## 🚀 Installation Guide
 
-Unimem is cross-platform and supports **macOS**, **Linux**, and **Windows**.
-
 ### 🍏 macOS Installation
 
 #### Option 1: Via Homebrew (Recommended)
-You can tap and install Unimem globally:
+You can tap and install Unimem globally with a single command:
 ```bash
 brew tap korrakiran/unimem
 brew install korrakiran/unimem/unimem
@@ -34,7 +76,6 @@ source ~/.zshrc
 *Note: Sourcing your shell configuration is only required once to activate the newly injected shell hooks in your current terminal session. Any newly opened terminal tabs or windows will load them automatically.*
 
 #### Option 2: Via `pipx` (Isolated Python Env)
-`pipx` automatically manages virtual environments for Python command-line tools:
 ```bash
 brew install pipx
 pipx ensurepath
@@ -46,10 +87,10 @@ pipx install unimem
 ### 🐧 Linux Installation
 
 #### Option 1: Via Homebrew (Linuxbrew)
-If you run Homebrew on Linux, you can install Unimem exactly like macOS:
 ```bash
 brew tap korrakiran/unimem
 brew install korrakiran/unimem/unimem
+source ~/.zshrc
 ```
 
 #### Option 2: Via `pipx`
@@ -64,12 +105,12 @@ pipx install unimem
 
 ---
 
-###  Windows Installation
+### 💻 Windows Installation
 
 #### Option 1: Via WSL (Windows Subsystem for Linux)
 If you are developing inside WSL, follow the **Linux Installation** instructions above.
 
-#### Option 2: Via `pipx` (Native Windows Powershell / CMD)
+#### Option 2: Via `pipx` (Native Windows PowerShell / CMD)
 Ensure you have Python 3.12+ installed, then open PowerShell and run:
 ```powershell
 python -m pip install --user pipx
@@ -78,49 +119,67 @@ python -m pipx ensurepath
 pipx install unimem
 ```
 
-#### Option 3: Direct Pip
-```powershell
-pip install unimem
+---
+
+## 🛠️ CLI Command Reference
+
+Unimem provides a set of powerful, lightweight CLI commands:
+
+### `unimem init`
+Initializes a new Unimem memory repository in the current directory. 
+* *Auto-run in the background by the shell hook when entering a new folder.*
+
+### `unimem status`
+Displays the active project root, memory initialization status, and current task focus.
+```text
+╭────── Unimem Status ───────╮
+│ test102                    │
+│                            │
+│ Root: /Users/kiran/test102 │
+╰────────────────────────────╯
+╭──────────────────── 🎯 Current Focus ────────────────────╮
+│ Goal: Initialize the repository and basic components     │
+│ Current Task: Initialize the backend service             │
+│ Next Task: Create a basic API endpoint                   │
+╰──────────────────────────────────────────────────────────╯
 ```
+
+### `unimem summary`
+Compiles all recorded event logs (saves, git commits, terminal runs) and reconciles manual modifications inside `.unimem/state.json` to regenerate the markdown `.unimem/memory.md` file.
+* *Auto-run in the background by the shell hook after every command completes.*
+
+### `unimem continue`
+Outputs a structured summary of the project state. This is what the incoming AI agent reads to instantly gain full project context.
+
+### `unimem run -- <command>`
+Runs a command inside the Unimem tracking sandbox (e.g. `unimem run -- npm run build`). This intercepts the command's exit code, duration, and output and logs it as an event to help compile the project history.
+
+### `unimem watch`
+Starts a filesystem watcher that logs file changes (creations, edits, deletions) as Unimem events in real time.
 
 ---
 
-## 🏛️ Architecture
+## 📂 Memory Folder Structure
 
-Unimem stores all project memory in a local `.unimem/` folder at the project root.
+All project memory resides inside a local, hidden `.unimem/` folder at the root of your project:
 
 ```text
 .unimem/
-├── state.json        # Compiled JSON database of project intelligence
-├── memory.md         # Auto-generated markdown of the current state
-├── events/           # Chronological logs of every event (file saves, git commits, runs)
-├── sessions/         # AI sessions showing active/ended agent logs
-├── snapshots/        # Backups of prior ProjectStates
-└── decisions/        # Markdown architecture decisions logs
-```
-
-### Flow Diagram
-
-```mermaid
-graph TD
-    A[AI Agent Command / User Actions] --> B(File Watcher / Git Commits)
-    B --> C[Event Stream Log in .unimem/events]
-    C --> D[Summarization Engine]
-    D --> E[.unimem/state.json & memory.md]
-    E --> F[Next AI Agent via unimem continue]
+├── state.json        # Structured JSON database of goals, tasks, and files
+├── memory.md         # Auto-compiled markdown summary read by AI agents
+├── events/           # Chronological event logs (file saves, git commits, run commands)
+├── sessions/         # Session logs representing each AI agent interaction
+├── snapshots/        # Point-in-time state backups
+└── decisions/        # Markdown architecture decision logs (ADRs)
 ```
 
 ---
 
 ## 🔌 Adapter Development Guide
 
-Unimem uses an Adapter pattern to connect code intelligence with agents. Custom adapters can be registered without modifying core code.
-
-### Writing a Custom Adapter
-Create a python file in the `unimem/adapters/` directory or register from an external plugin:
+Unimem uses an Adapter pattern to connect code intelligence with agents. Custom adapters can be registered to support proprietary agents:
 
 ```python
-from pathlib import Path
 from typing import Dict, Any, List
 from unimem.adapters.base import BaseAdapter
 from unimem.adapters.registry import AdapterRegistry
@@ -143,7 +202,7 @@ class MyCustomAdapter(BaseAdapter):
 
 ---
 
-## 🤝 Contribution Guide
+## 🤝 Contributing
 
 We welcome contributions to Unimem! To set up local development:
 
@@ -162,9 +221,9 @@ We welcome contributions to Unimem! To set up local development:
    ```bash
    pytest
    ```
-4. Follow PEP 8 guidelines and write tests for any new adapters or commands.
 
 ---
 
 ## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](file:///Users/kiran/collector/LICENSE) file for details.
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
