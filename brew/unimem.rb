@@ -12,7 +12,7 @@ class Unimem < Formula
   homepage "https://github.com/korrakiran/collector"
   url "https://github.com/korrakiran/collector/archive/refs/tags/v0.1.0.tar.gz"
   # Note: Replace this placeholder SHA256 with the actual release archive SHA256
-  sha256 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  sha256 "5f8758d59c4ad763b4f6da0f833c25007eee42ecd3d9037a0664097b9ac14ada"
   license "MIT"
   head "https://github.com/korrakiran/collector.git", branch: "main"
 
