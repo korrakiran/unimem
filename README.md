@@ -5,7 +5,7 @@
 [![Platform Support](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey.svg)](#-installation-guide)
 [![Homebrew Formula](https://img.shields.io/badge/Homebrew-Formula-orange.svg)](https://github.com/korrakiran/homebrew-unimem)
 [![Tests](https://img.shields.io/badge/Tests-41%20passing-brightgreen.svg)](https://github.com/korrakiran/collector)
-[![Version](https://img.shields.io/badge/Version-0.3.0-blue.svg)](https://github.com/korrakiran/collector/releases)
+[![Version](https://img.shields.io/badge/Version-0.4.0-blue.svg)](https://github.com/korrakiran/collector/releases)
 
 **Unimem** is a universal, persistent project memory and handoff layer designed for AI coding agents (like Claude Code, Gemini CLI, Cursor, Aider, Windsurf, Cline, and GitHub Copilot). It helps you seamlessly switch between different AI coding tools mid-project without losing context, progress, or architectural decisions.
 
