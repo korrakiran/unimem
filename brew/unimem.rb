@@ -75,7 +75,7 @@ class Unimem < Formula
 
   resource "rich" do
     url "https://files.pythonhosted.org/packages/c0/8f/0722ca900cc807c13a6a0c696dacf35430f72e0ec571c4275d2371fca3e9/rich-15.0.0.tar.gz"
-    sha256 "edd07a4824c6b40189fb7ac9bc4c52536e7780fbbfbddf6f1e2502c31b068c36"
+    sha256 "edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36"
   end
 
   resource "shellingham" do
