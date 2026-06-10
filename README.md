@@ -1,8 +1,20 @@
 # Unimem — Universal Project Memory Layer for AI Coding Agents
 
-Unimem is a lightweight, local, open-source persistent memory and handoff system designed specifically for AI coding agents (such as Claude Code, Gemini CLI, Codex, Aider, Antigravity, and future LLM agents).
+If one AI agent runs out of tokens or context window limits, you can switch to another agent, say `continue`, and the new agent immediately understands the exact context of the project.
 
-Unlike chat histories, Unimem focuses on **Persistent Project Intelligence**. It stores the high-level understanding of what was built, architecture decisions, goals, tasks, and modified files in a format that any AI agent can read and update.
+### ⚡ Zero-Command Handoff Automation (How it Works)
+
+**You don't need to initialize, watch, or compile manually anymore—the global rules force the agents to manage the Unimem memory state themselves!**
+
+Here is the exact sequence of what happens under the hood:
+1. **You open Antigravity (or any other agent) and say "build project X":**
+   - The agent starts up, reads the global `~/.cursorrules` file, notices the folder has no project memory yet, and silently runs `unimem init` in the background.
+   - As it creates code files, it silently saves the state and updates `.unimem/memory.md` with goals and file details.
+2. **The first agent runs out of tokens and you terminate the session.**
+3. **You open Gemini CLI, Codex, or Claude Code in that directory:**
+   - The new agent starts up, reads the global `~/.cursorrules` / `~/.clauderules`, and immediately executes a command to read `.unimem/memory.md` to load the current workspace context.
+4. **You type `continue`:**
+   - Because the agent has already read `.unimem/memory.md` and knows the exact project state, it will immediately understand what files were created, what features are finished, and pick up right where the first agent stopped!
 
 ---
 
