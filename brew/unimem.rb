@@ -106,8 +106,12 @@ class Unimem < Formula
   def install
     venv = virtualenv_create(libexec, "python3.12")
     
-    # Install pydantic_core from the cached wheel file to avoid Maturin build dependency
-    system Formula["python@3.12"].opt_bin/"python3.12", "-m", "pip", "--python", libexec/"bin/python", "install", "--no-deps", resource("pydantic_core").cached_download
+    # Symlink the cached wheel to a valid wheel filename format so pip accepts it
+    valid_wheel = buildpath/"pydantic_core-2.46.4-cp312-cp312-macosx_11_0_arm64.whl"
+    ln_s resource("pydantic_core").cached_download, valid_wheel
+
+    # Install pydantic_core from the symlinked wheel file to avoid Maturin build dependency
+    system Formula["python@3.12"].opt_bin/"python3.12", "-m", "pip", "--python", libexec/"bin/python", "install", "--no-deps", valid_wheel
     
     resources.each do |r|
       next if r.name == "pydantic_core"
