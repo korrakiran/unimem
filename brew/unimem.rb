@@ -104,7 +104,17 @@ class Unimem < Formula
   end
 
   def install
-    virtualenv_install_with_resources
+    venv = virtualenv_create(libexec, "python@3.12")
+    
+    # Install pydantic_core from the cached wheel file to avoid Maturin build dependency
+    system libexec/"bin/pip", "install", "--no-deps", resource("pydantic_core").cached_download
+    
+    resources.each do |r|
+      next if r.name == "pydantic_core"
+      venv.pip_install r
+    end
+    
+    venv.pip_install_and_link buildpath
   end
 
   def post_install
