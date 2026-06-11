@@ -190,6 +190,7 @@ unimem snapshot restore <snapshot_name>
 ## Memory Folder Structure
 
 ```text
+AGENTS.md
 .unimem/
 ├── state.json        # Structured JSON database of goals, tasks, and files
 ├── memory.md         # Auto-compiled markdown summary read by AI agents
@@ -281,8 +282,8 @@ We welcome contributions to Unimem! To set up local development:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/korrakiran/collector.git
-   cd collector
+   git clone https://github.com/korrakiran/unimem.git
+   cd unimem
    ```
 2. Set up virtual environment and install in editable mode with dev dependencies:
    ```bash
