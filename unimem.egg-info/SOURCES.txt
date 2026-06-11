@@ -3,6 +3,7 @@ README.md
 pyproject.toml
 tests/test_adapters.py
 tests/test_cli.py
+tests/test_crash_recovery.py
 tests/test_git_collector.py
 tests/test_manager.py
 tests/test_schemas.py
@@ -27,6 +28,7 @@ unimem/cli/commands/init.py
 unimem/cli/commands/snapshot.py
 unimem/cli/commands/status.py
 unimem/cli/commands/summary.py
+unimem/cli/commands/task.py
 unimem/collector/events.py
 unimem/collector/file_collector.py
 unimem/collector/git_collector.py

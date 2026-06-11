@@ -3,7 +3,7 @@
 import re
 from typing import List, Set
 from unimem.summarizer.base import BaseSummarizer
-from unimem.memory.schemas import ProjectState, Event
+from unimem.memory.schemas import ProjectState, Event, FileOperation
 from unimem.utils.logger import logger
 
 class LocalSummarizer(BaseSummarizer):
@@ -95,5 +95,66 @@ class LocalSummarizer(BaseSummarizer):
             if promoted:
                 current_state.current_task = current_state.next_task
                 current_state.next_task = ""
+
+        # Update file history from events
+        file_history = []
+        for event in events:
+            task_str = getattr(event, "task", "")
+            
+            if event.event_type == "file_created":
+                for f in event.files_changed:
+                    file_history.append(FileOperation(
+                        file_path=f,
+                        operation_type="created",
+                        timestamp=event.timestamp,
+                        task=task_str
+                    ))
+            elif event.event_type == "file_modified":
+                for f in event.files_changed:
+                    file_history.append(FileOperation(
+                        file_path=f,
+                        operation_type="modified",
+                        timestamp=event.timestamp,
+                        task=task_str
+                    ))
+            elif event.event_type == "file_deleted":
+                for f in event.files_changed:
+                    file_history.append(FileOperation(
+                        file_path=f,
+                        operation_type="deleted",
+                        timestamp=event.timestamp,
+                        task=task_str
+                    ))
+            elif event.event_type == "file_moved":
+                if len(event.files_changed) >= 2:
+                    file_history.append(FileOperation(
+                        file_path=event.files_changed[0],
+                        operation_type="deleted",
+                        timestamp=event.timestamp,
+                        task=task_str
+                    ))
+                    file_history.append(FileOperation(
+                        file_path=event.files_changed[1],
+                        operation_type="created",
+                        timestamp=event.timestamp,
+                        task=task_str
+                    ))
+                elif len(event.files_changed) == 1:
+                    file_history.append(FileOperation(
+                        file_path=event.files_changed[0],
+                        operation_type="modified",
+                        timestamp=event.timestamp,
+                        task=task_str
+                    ))
+            elif event.files_changed and event.event_type not in ["session_start", "session_end"]:
+                for f in event.files_changed:
+                    file_history.append(FileOperation(
+                        file_path=f,
+                        operation_type="modified",
+                        timestamp=event.timestamp,
+                        task=task_str
+                    ))
+
+        current_state.file_history = file_history
 
         return current_state

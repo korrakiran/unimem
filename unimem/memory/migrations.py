@@ -24,6 +24,7 @@ def migrate_state(data: Dict[str, Any]) -> Dict[str, Any]:
         "recent_decisions": [],
         "blocked_by": [],
         "tool_history": [],
+        "file_history": [],
     }
     
     migrated = False

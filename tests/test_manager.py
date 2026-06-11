@@ -228,3 +228,50 @@ def test_manager_complete_task_and_promotion(initialized_unimem):
     final_state = manager.load_state()
     assert final_state.current_task == "Task B"
     assert final_state.next_task == ""
+
+def test_manager_continuous_state_json_and_file_history(initialized_unimem):
+    """Verify that file events continuously update state.json (and file_history) but do not update memory.md."""
+    manager = MemoryManager(initialized_unimem)
+    
+    # Set a current task in the state
+    state = manager.load_state()
+    state.current_task = "Task-123"
+    manager.save_state(state)
+    
+    # Store initial mtimes of state.json and memory.md
+    state_file = get_state_file(initialized_unimem)
+    memory_file = get_memory_md(initialized_unimem)
+    
+    initial_memory_mtime = memory_file.stat().st_mtime
+    
+    # Record a file created event
+    ev1 = Event(
+        tool="watcher",
+        event_type="file_created",
+        prompt="",
+        response_summary="Created file 'src/main.py'",
+        files_changed=["src/main.py"]
+    )
+    
+    import time
+    time.sleep(0.1) # ensure time difference for mtime if checked
+    manager.record_event(ev1, auto_snapshot=False)
+    
+    # Verify memory.md was NOT updated (mtime did not change)
+    assert memory_file.stat().st_mtime == initial_memory_mtime
+    
+    # Verify state.json WAS updated and has file_history entry
+    reloaded_state = manager.load_state()
+    assert len(reloaded_state.file_history) == 1
+    op1 = reloaded_state.file_history[0]
+    assert op1.file_path == "src/main.py"
+    assert op1.operation_type == "created"
+    assert op1.task == "Task-123"
+    assert op1.timestamp == ev1.timestamp
+
+    # Now run rebuild_state_from_events (as summary command would) with update_memory=True
+    time.sleep(0.1)
+    manager.rebuild_state_from_events(update_memory=True)
+    
+    # Verify memory.md WAS updated now
+    assert memory_file.stat().st_mtime > initial_memory_mtime

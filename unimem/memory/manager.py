@@ -183,13 +183,14 @@ class MemoryManager:
             
         return state
 
-    def save_state(self, state: ProjectState) -> None:
-        """Save the ProjectState to state.json and update memory.md."""
+    def save_state(self, state: ProjectState, update_memory: bool = True) -> None:
+        """Save the ProjectState to state.json and optionally update memory.md."""
         state.last_updated = get_timestamp_str()
         state_file = get_state_file(self.project_root)
         JsonStore.save(state_file, state.model_dump())
-        self.update_memory_md(state)
-        self._update_rules_files()
+        if update_memory:
+            self.update_memory_md(state)
+            self._update_rules_files()
 
     def recover_orphan_sessions(self) -> List[str]:
         """Close sessions whose end_time is None and start_time is older than 10 minutes.
@@ -284,7 +285,7 @@ Do NOT scan, list, or search the entire project repository or folder tree on sta
         except Exception as e:
             logger.debug(f"Failed to write agent rule files: {e}")
 
-    def rebuild_state_from_events(self, summarizer_type: str = "local") -> ProjectState:
+    def rebuild_state_from_events(self, summarizer_type: str = "local", update_memory: bool = True) -> ProjectState:
         """Rebuild state from recorded events directly within the manager to avoid circular imports."""
         from unimem.summarizer.local import LocalSummarizer
         
@@ -316,7 +317,7 @@ Do NOT scan, list, or search the entire project repository or folder tree on sta
         updated_state = summarizer.summarize(current_state, events)
         
         # Save the updated state
-        self.save_state(updated_state)
+        self.save_state(updated_state, update_memory=update_memory)
         
         return updated_state
 
@@ -325,6 +326,14 @@ Do NOT scan, list, or search the entire project repository or folder tree on sta
         events_dir = get_events_dir(self.project_root)
         events_dir.mkdir(parents=True, exist_ok=True)
         
+        # Populate task from current state if not specified
+        if not getattr(event, "task", ""):
+            try:
+                state = self.load_state()
+                event.task = state.current_task
+            except Exception:
+                pass
+
         timestamp = event.timestamp.replace(":", "-")
         event_file = events_dir / f"event_{timestamp}_{uuid.uuid4().hex[:8]}.json"
         
@@ -334,7 +343,8 @@ Do NOT scan, list, or search the entire project repository or folder tree on sta
         
         # Rebuild state from all events to keep it continuously updated
         try:
-            state = self.rebuild_state_from_events()
+            # Update only state.json, not memory.md during individual event record
+            state = self.rebuild_state_from_events(update_memory=False)
             
             if auto_snapshot:
                 create_snapshot(self.project_root, state)
