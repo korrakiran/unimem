@@ -31,6 +31,24 @@ metadata
 /var/folders/
 /tmp/
 /private/var/
+
+# Agent rule files
+AGENTS.md
+.cursorrules
+.clauderules
+.windsurfrules
+.clinerules
+.antigravityrules
+.geminirules
+.aiderules
+.aider.instructions.md
+.supermavenrules
+.codeiumrules
+.continuerules
+.doublerules
+.tabninerules
+.phindrules
+.github/copilot-instructions.md
 # Unit test / coverage reports
 htmlcov/
 .tox/
