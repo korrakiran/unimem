@@ -148,6 +148,7 @@ class Unimem < Formula
       - When you finish or pause work, always update `.unimem/state.json` first to document completed features, goals, or tasks, then run `unimem summary` to synchronize changes into `memory.md` and keep the supporting `.unimem/` logs aligned.
       - When you complete the current task, run: unimem task done --next "describe the next task"
       - If you are interrupted or about to stop, always run: unimem task done --next "describe next task" before exiting so context is preserved for the next agent.
+      - Always update the local project port info in state tracking
 
       UNIMEM UPDATE GUIDELINES:
       Run `unimem summary` at checkpoint moments to prevent mid-process context loss:
