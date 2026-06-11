@@ -23,10 +23,9 @@ wheels/
 pip-log.txt
 pip-delete-this-directory.txt
 metadata
-target
-.unimem/*
-!.unimem/memory.md
-
+.unimem/
+*.png
+/var/folders/
 # Unit test / coverage reports
 htmlcov/
 .tox/

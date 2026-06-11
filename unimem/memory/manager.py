@@ -248,10 +248,14 @@ Do NOT scan, list, or search the entire project repository or folder tree on sta
 4. Trust `.unimem/state.json` and `.unimem/memory.md` as the absolute sources of truth for the project state. Do NOT attempt to reconstruct them or scan the repository.
 
 - When you finish or pause work:
-- Always edit and update `.unimem/state.json` first to document completed features, goals, or tasks.
-- Next, run `unimem summary` in the terminal to compile and synchronize these changes into `.unimem/memory.md` and update agent rules files so the next agent can take over with full context.
-- When you complete the current task, run: unimem task done --next "describe the next task"
-- If you are interrupted or about to stop, always run: unimem task done --next "describe next task" before exiting so context is preserved for the next agent.
+  - Always edit and update `.unimem/state.json` first to document completed features, goals, or tasks.
+  - Next, run `unimem summary` in the terminal to compile and synchronize these changes into `.unimem/memory.md` and update agent rules files so the next agent can take over with full context.
+  - When you complete the current task, run: unimem task done --next "describe the next task"
+  - If you are interrupted or about to stop, always run: unimem task done --next "describe next task" before exiting so context is preserved for the next agent.
+
+- CRITICAL GIT RULE:
+  - Do NOT stage, commit, or push the `.unimem` directory or any files inside it (such as `.unimem/state.json` or `.unimem/memory.md`). They are local-only project memory.
+  - Do NOT stage, commit, or push any temporary files, logs, or screenshots (especially those in `/var/folders/`, `/tmp/`, or similar temp folders).
 """
         try:
             # List of all major AI agent and editor rule files
