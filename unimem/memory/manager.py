@@ -295,6 +295,7 @@ CRITICAL GIT RULE:
             # List of all major AI agent and editor rule files
             rule_files = [
                 "AGENTS.md",
+                "CLAUDE.md",
                 ".cursorrules",
                 ".clauderules",
                 ".windsurfrules",
