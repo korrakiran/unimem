@@ -32,6 +32,7 @@ def test_watcher_records_event(initialized_unimem):
     test_file = initialized_unimem / "new_module.py"
     event = FileCreatedEvent(str(test_file))
     handler.on_created(event)
+    handler.batch_operations()
     
     # Verify a new event was recorded
     event_files = list(events_dir.glob("*.json"))

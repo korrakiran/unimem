@@ -27,10 +27,7 @@ def done_cmd(
         
     try:
         # Complete task and promote
-        manager.complete_task(next_task)
-        
-        # Load the updated state to print
-        state = manager.load_state()
+        state = manager.complete_task(next_task)
         
         console.print("[green]Task completed and promoted successfully![/green]")
         console.print(f"  [bold]Current Goal:[/bold] {state.current_goal or 'Not set'}")

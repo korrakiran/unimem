@@ -29,6 +29,8 @@ class FilesystemWatcher:
         """Stop the filesystem monitor."""
         if self.observer:
             logger.info("Stopping filesystem watcher...")
+            if hasattr(self.handler, 'batch_operations'):
+                self.handler.batch_operations()
             self.observer.stop()
             self.observer.join()
             self.observer = None

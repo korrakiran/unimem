@@ -26,12 +26,23 @@ class GenericAdapter(BaseAdapter):
             return {}
             
         try:
-            state = manager.load_state()
+            # Reconcile memory here as it's a boundary action
+            state = manager.load_state(reconcile_memory=True)
+            
+            # Lazy-load memory.md heuristic
+            task_str = state.current_task.lower()
+            goal_str = state.current_goal.lower()
+            narrative_keywords = ["handoff", "summary", "plan", "design", "architecture", "review", "refactor", "initialize"]
+            requires_memory = not state.current_task or any(k in task_str or k in goal_str for k in narrative_keywords)
+            
             memory_md_path = self.project_root / ".unimem" / "memory.md"
             context_md = ""
             if memory_md_path.exists():
-                with open(memory_md_path, "r", encoding="utf-8") as f:
-                    context_md = f.read()
+                if requires_memory:
+                    with open(memory_md_path, "r", encoding="utf-8") as f:
+                        context_md = f.read()
+                else:
+                    context_md = "Unimem active. Read .unimem/memory.md for full project memory."
                     
             return {
                 "project_name": state.project_name,

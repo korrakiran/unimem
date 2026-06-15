@@ -163,7 +163,7 @@ class MemoryManager:
         except Exception as e:
             logger.debug(f"Failed to reconcile state from memory.md: {e}")
 
-    def load_state(self) -> ProjectState:
+    def load_state(self, reconcile_memory: bool = True) -> ProjectState:
         """Load project state, applying migrations if necessary."""
         state_file = get_state_file(self.project_root)
         if not state_file.exists():
@@ -176,15 +176,17 @@ class MemoryManager:
         migrated_data = migrate_state(data)
         state = ProjectState(**migrated_data)
         
-        # Reconcile from memory.md if it exists and is newer than state.json
-        memory_file = get_memory_md(self.project_root)
-        if memory_file.exists() and memory_file.stat().st_mtime > state_file.stat().st_mtime:
-            self.reconcile_from_memory_md(state, memory_file)
+        # Reconcile from memory.md if requested (lazy load)
+        if reconcile_memory:
+            memory_file = get_memory_md(self.project_root)
+            if memory_file.exists() and memory_file.stat().st_mtime > state_file.stat().st_mtime:
+                self.reconcile_from_memory_md(state, memory_file)
             
         return state
 
     def save_state(self, state: ProjectState, update_memory: bool = True) -> None:
         """Save the ProjectState to state.json and optionally update memory.md."""
+        self.archive_old_completed_tasks(state)
         state.last_updated = get_timestamp_str()
         state_file = get_state_file(self.project_root)
         JsonStore.save(state_file, state.model_dump())
@@ -250,9 +252,9 @@ Do NOT scan, list, or search the entire project repository or folder tree on sta
 
 CRITICAL WORKFLOW RULES:
 
-- You MUST update `.unimem/state.json` immediately after EVERY individual file is created, modified, or deleted. Do NOT batch file changes — each file operation must be recorded in the `file_history` of `state.json` immediately. This ensures crash recovery and context preservation.
+- You MUST update `.unimem/state.json` with your file changes. To optimize token consumption, batch state syncs: group 3-5 file operations in memory/history before performing a single `.unimem/state.json` write instead of a read→edit→sync cycle for every individual file operation.
 
-- Do NOT update `memory.md` after every file change. Instead, run `unimem summary` at strategic checkpoints (see UNIMEM UPDATE GUIDELINES below).
+- Lazy-load `.unimem/memory.md`: Only read or parse `.unimem/memory.md` when the task type requires it (e.g. handoffs, summaries, or complex task planning), rather than injecting or loading it on every simple file operation.
 
 - When you finish or pause work, always update `.unimem/state.json` first to document completed features, goals, or tasks, then run `unimem summary` to synchronize changes into `memory.md` and keep the supporting `.unimem/` logs aligned.
 
@@ -349,8 +351,8 @@ CRITICAL GIT RULE:
                 except Exception as e:
                     logger.debug(f"Failed to load event file {f.name}: {e}")
                     
-        # Load current state as the baseline
-        current_state = self.load_state()
+        # Load current state as the baseline (skip memory reconciliation here)
+        current_state = self.load_state(reconcile_memory=False)
         
         # Process events through the summarizer
         updated_state = summarizer.summarize(current_state, events)
@@ -365,10 +367,10 @@ CRITICAL GIT RULE:
         events_dir = get_events_dir(self.project_root)
         events_dir.mkdir(parents=True, exist_ok=True)
         
-        # Populate task from current state if not specified
+        # Populate task from current state if not specified (skip memory reconciliation here)
         if not getattr(event, "task", ""):
             try:
-                state = self.load_state()
+                state = self.load_state(reconcile_memory=False)
                 event.task = state.current_task
             except Exception:
                 pass
@@ -393,14 +395,136 @@ CRITICAL GIT RULE:
             
         return event_file
 
-    def complete_task(self, next_task: str = "") -> None:
+    def record_events_batch(self, events: List[Event], auto_snapshot: bool = True) -> List[Path]:
+        """Record a batch of events to the events folder and perform a single update to state.json."""
+        events_dir = get_events_dir(self.project_root)
+        events_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Load the state once at the start to populate tasks for all events if needed
+        current_task = ""
+        try:
+            state = self.load_state(reconcile_memory=False)
+            current_task = state.current_task
+        except Exception:
+            pass
+            
+        event_files = []
+        for event in events:
+            if not getattr(event, "task", ""):
+                event.task = current_task
+                
+            timestamp = event.timestamp.replace(":", "-")
+            event_file = events_dir / f"event_{timestamp}_{uuid.uuid4().hex[:8]}.json"
+            JsonStore.save(event_file, event.model_dump())
+            event_files.append(event_file)
+            
+        # Rebuild state only ONCE after saving all event files in the batch
+        try:
+            state = self.rebuild_state_from_events(update_memory=False)
+            if auto_snapshot:
+                create_snapshot(self.project_root, state)
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            logger.debug(f"Failed to auto-rebuild state on batch event record: {e}")
+            
+        return event_files
+
+    def archive_old_completed_tasks(self, state: ProjectState) -> None:
+        """Prune done tasks/features older than 7 days from state.json and save them to archive.json."""
+        archive_file = self.project_root / ".unimem" / "archive.json"
+        
+        # Load existing archive if it exists
+        archive_data = {}
+        if archive_file.exists():
+            try:
+                archive_data = JsonStore.load(archive_file)
+            except Exception:
+                pass
+        if "completed_tasks" not in archive_data:
+            archive_data["completed_tasks"] = []
+            
+        now = datetime.now(timezone.utc)
+        retained_features = []
+        archived_any = False
+        
+        # We need to find completion timestamps. Let's build a map from events and file history
+        task_timestamps = {}
+        
+        # Scan file history
+        for op in state.file_history:
+            if op.task:
+                try:
+                    dt = datetime.fromisoformat(op.timestamp.replace("Z", "+00:00"))
+                    task_name = op.task.strip()
+                    if task_name not in task_timestamps or dt > task_timestamps[task_name]:
+                        task_timestamps[task_name] = dt
+                except Exception:
+                    pass
+                    
+        # Scan events folder
+        events_dir = get_events_dir(self.project_root)
+        if events_dir.exists():
+            for f in events_dir.glob("*.json"):
+                try:
+                    data = JsonStore.load(f)
+                    ev_task = data.get("task", "")
+                    ev_ts = data.get("timestamp", "")
+                    if ev_task and ev_ts:
+                        dt = datetime.fromisoformat(ev_ts.replace("Z", "+00:00"))
+                        task_name = ev_task.strip()
+                        if task_name not in task_timestamps or dt > task_timestamps[task_name]:
+                            task_timestamps[task_name] = dt
+                except Exception:
+                    pass
+
+        for feature in state.completed_features:
+            feature_name = feature.strip()
+            # Try to find the completion timestamp
+            completion_dt = None
+            # Direct match
+            if feature_name in task_timestamps:
+                completion_dt = task_timestamps[feature_name]
+            else:
+                # Case-insensitive / partial match
+                for t_name, dt in task_timestamps.items():
+                    if t_name.lower() == feature_name.lower() or feature_name.lower() in t_name.lower():
+                        completion_dt = dt
+                        break
+            
+            if completion_dt:
+                age_days = (now - completion_dt).days
+                if age_days > 7:
+                    # Archive it
+                    archive_data["completed_tasks"].append({
+                        "task": feature,
+                        "completed_at": completion_dt.isoformat()
+                    })
+                    archived_any = True
+                    continue
+            
+            retained_features.append(feature)
+            
+        if archived_any:
+            state.completed_features = retained_features
+            # Prune file_history of archived tasks
+            archived_task_names = {t["task"].strip().lower() for t in archive_data["completed_tasks"]}
+            state.file_history = [
+                op for op in state.file_history
+                if not (op.task and op.task.strip().lower() in archived_task_names)
+            ]
+            JsonStore.save(archive_file, archive_data)
+            logger.info(f"Archived completed tasks older than 7 days to {archive_file.name}")
+
+    def complete_task(self, next_task: str = "") -> ProjectState:
         """Complete the current task and promote the next one."""
-        state = self.load_state()
+        state = self.load_state(reconcile_memory=True)
         if state.current_task:
             state.completed_features.append(state.current_task)
         state.current_task = state.next_task
         state.next_task = next_task
         self.save_state(state)
+        return state
 
     def add_decision(self, decision_title: str, context: str, decision: str) -> Path:
         """Add a design or architectural decision document."""
@@ -413,22 +537,22 @@ CRITICAL GIT RULE:
         decision_file = decisions_dir / filename
         
         content = f"""# Decision: {decision_title}
-
+ 
 **Date**: {timestamp}
-
+ 
 ## Context
 {context}
-
+ 
 ## Decision
 {decision}
-
+ 
 ## Status
 Approved
 """
         FileStore.write(decision_file, content)
         
         # Update project state
-        state = self.load_state()
+        state = self.load_state(reconcile_memory=True)
         state.recent_decisions.append(f"{decision_title} ({timestamp})")
         self.save_state(state)
         

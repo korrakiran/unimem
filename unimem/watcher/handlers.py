@@ -15,6 +15,7 @@ class UnimemFileSystemEventHandler(FileSystemEventHandler):
         super().__init__()
         self.project_root = project_root
         self.manager = MemoryManager(project_root)
+        self._pending_events = []
 
     def _should_process(self, path_str: str) -> bool:
         """Filter out files that should be ignored."""
@@ -52,10 +53,24 @@ class UnimemFileSystemEventHandler(FileSystemEventHandler):
                 response_summary=summary,
                 files_changed=files
             )
-            self.manager.record_event(event, auto_snapshot=True)
-            logger.info(f"[watcher] Recorded {event_type} event for {rel_path}")
+            self._pending_events.append(event)
+            logger.info(f"[watcher] Queued {event_type} event for {rel_path} (pending: {len(self._pending_events)})")
+            
+            if len(self._pending_events) >= 5:
+                self.batch_operations()
         except Exception as e:
             logger.debug(f"Error handling watcher event: {e}")
+
+    def batch_operations(self) -> None:
+        """Process buffered events and perform a single write to state.json."""
+        if not self._pending_events:
+            return
+            
+        events_to_process = list(self._pending_events)
+        self._pending_events.clear()
+        
+        logger.info(f"[watcher] Batching {len(events_to_process)} file events to Unimem...")
+        self.manager.record_events_batch(events_to_process, auto_snapshot=True)
 
     def on_created(self, event: FileSystemEvent) -> None:
         if self._should_process(event.src_path):

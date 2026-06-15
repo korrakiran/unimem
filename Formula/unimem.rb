@@ -11,7 +11,7 @@ class Unimem < Formula
 
   desc "Universal Project Memory Layer for AI Coding Agents"
   homepage "https://github.com/korrakiran/unimem"
-  url "https://github.com/korrakiran/unimem/archive/refs/tags/v0.5.3.tar.gz"
+  url "https://github.com/korrakiran/unimem/archive/refs/tags/v0.5.4.tar.gz"
   sha256 "037ac2f72f3a833407801020cd8cc712be265f56d4f160c99138c5258910eef7"
   license "MIT"
   head "https://github.com/korrakiran/unimem.git", branch: "main"
@@ -143,9 +143,9 @@ class Unimem < Formula
       
       CRITICAL WORKFLOW RULES:
       
-      - You MUST update `.unimem/state.json` immediately after EVERY individual file is created, modified, or deleted. Do NOT batch file changes — each file operation must be recorded in the `file_history` of `state.json` immediately. This ensures crash recovery and context preservation.
+      - You MUST update `.unimem/state.json` with your file changes. To optimize token consumption, batch state syncs: group 3-5 file operations in memory/history before performing a single `.unimem/state.json` write instead of a read→edit→sync cycle for every individual file operation.
       
-      - Do NOT update `memory.md` after every file change. Instead, run `unimem summary` at strategic checkpoints (see UNIMEM UPDATE GUIDELINES below).
+      - Lazy-load `.unimem/memory.md`: Only read or parse `.unimem/memory.md` when the task type requires it (e.g. handoffs, summaries, or complex task planning), rather than injecting or loading it on every simple file operation.
       
       - When you finish or pause work, always update `.unimem/state.json` first to document completed features, goals, or tasks, then run `unimem summary` to synchronize changes into `memory.md` and keep the supporting `.unimem/` logs aligned.
       
