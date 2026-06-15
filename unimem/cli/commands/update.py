@@ -46,7 +46,10 @@ def update_cmd():
         # Run the update process with standard streams connected
         result = subprocess.run(cmd)
         if result.returncode == 0:
-            console.print("[green]✓ Unimem upgraded successfully![/green]")
+            # Use sys.stdout.write to avoid any lazy imports (like rich unicode data lookup)
+            # which fail when the virtualenv files are hot-swapped on disk during the upgrade.
+            sys.stdout.write("✓ Unimem upgraded successfully!\n")
+            return
         else:
             console.print(f"[red]Upgrade failed with exit code: {result.returncode}[/red]")
             raise typer.Exit(code=result.returncode)
