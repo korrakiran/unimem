@@ -217,6 +217,7 @@ class Unimem < Formula
 
       # Unimem Auto-Rule Injector & Init
       unimem_inject_rules() {
+        setopt localoptions nomonitor
         if [[ "$PWD" != "$HOME" && "$PWD" == "$HOME/"* ]]; then
           local rule_files=(
             ".cursorrules"
