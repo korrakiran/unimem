@@ -11,8 +11,8 @@ class Unimem < Formula
 
   desc "Universal Project Memory Layer for AI Coding Agents"
   homepage "https://github.com/korrakiran/unimem"
-  url "https://github.com/korrakiran/unimem/archive/refs/tags/v0.5.4.tar.gz"
-  sha256 "4b9239ba2fb2ed60be27b4db76b38250e76d9d07e3fff092807ac491baab6c70"
+  url "https://github.com/korrakiran/unimem/archive/refs/tags/v0.6.0.tar.gz"
+  sha256 "439759e6b6621050daef04327534c6b774ba958ccd1dd0f81a267a87d1538a92"
   license "MIT"
   head "https://github.com/korrakiran/unimem.git", branch: "main"
 
